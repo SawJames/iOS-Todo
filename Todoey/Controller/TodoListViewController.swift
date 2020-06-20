@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
 
     var toDoItems : Results<Item>?
     let realm = try! Realm()
@@ -23,14 +23,7 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.separatorStyle = .none
-        
-//       print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
-//        if let items = defaults.array(forKey: "TodoListArray") as? [Item]{
-//            itemArray = items
-//        }
-//        let request : NSFetchRequest<Item> = Item.fetchRequest()
-       
+        tableView.rowHeight = 80.0
 
     }
     
@@ -41,8 +34,9 @@ class TodoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
+//        let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         if let  item = toDoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
            
@@ -51,13 +45,7 @@ class TodoListViewController: UITableViewController {
         }else{
             cell.textLabel?.text = "No Items Added"
         }
- 
-        
-//        if item.done == true {
-//            cell.accessoryType = .checkmark
-//        } else {
-//            cell.accessoryType = .none
-//        }
+  
         return cell
     }
     
@@ -113,21 +101,27 @@ class TodoListViewController: UITableViewController {
     
     //MARK: - Modal Manupulation Methods
     
-//    func saveItems(){
-//        do{
-//            try context.save()
-//        }catch{
-//            print("Error saving context \(error)")
-//        }
-//        self.tableView.reloadData()
-//    }
-    
 
     
     func loadItems(){
         toDoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
+    
+    override func updateModel(at indexPath: IndexPath) {
+           
+           super.updateModel(at: indexPath)
+               if let itemForDeletion = self.toDoItems?[indexPath.row]{
+                   do{
+                       try self.realm.write{
+                           self.realm.delete(itemForDeletion)
+                       }
+                   }catch{
+                       print("Error deleting category, \(error)")
+                   }
+
+               }
+       }
 
 }
 
